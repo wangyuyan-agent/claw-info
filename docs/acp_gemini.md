@@ -149,7 +149,7 @@ DO NOT use sessions_spawn. DO NOT answer yourself. ONLY call the tools above.
 ```bash
 #!/bin/bash
 ACPX=<ACPX_PATH>
-$ACPX --agent "gemini --experimental-acp" sessions ensure --name my-tg >/dev/null 2>&1
+cd $HOME && $ACPX --agent "gemini --experimental-acp" sessions ensure --name my-tg >/dev/null 2>&1
 $ACPX --agent "gemini --experimental-acp" --format json prompt -s my-tg "$1" 2>/dev/null \
   | python3 -c "
 import sys, json

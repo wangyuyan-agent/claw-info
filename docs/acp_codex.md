@@ -152,7 +152,7 @@ DO NOT use sessions_spawn. DO NOT answer yourself. ONLY call the tools above.
 ```bash
 #!/bin/bash
 ACPX=<ACPX_PATH>
-$ACPX codex sessions ensure --name my-tg >/dev/null 2>&1
+cd $HOME && $ACPX codex sessions ensure --name my-tg >/dev/null 2>&1
 $ACPX --format json codex prompt -s my-tg "$1" 2>/dev/null \
   | python3 -c "
 import sys, json

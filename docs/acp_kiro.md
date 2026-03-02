@@ -166,9 +166,11 @@ DO NOT use sessions_spawn. DO NOT answer yourself. ONLY call the tools above.
 ```bash
 #!/bin/bash
 ACPX=<ACPX_PATH>
-$ACPX kiro sessions ensure --name my-tg 2>/dev/null
+cd $HOME && $ACPX kiro sessions ensure --name my-tg 2>/dev/null
 $ACPX kiro prompt -s my-tg "$1" 2>/dev/null | grep -v '^\[' | grep -v '^$' | head -50
 ```
+
+> **重要**：`cd $HOME` 確保 `sessions ensure` 的 cwd 與 session 建立時一致。若 relay agent 的 workspace 目錄與 session cwd 不符，acpx 會回傳 `RUNTIME: Internal error`，導致 relay 損壞。
 
 ```bash
 chmod +x ~/.openclaw/workspace-my-relay/relay.sh
