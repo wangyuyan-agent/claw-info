@@ -122,13 +122,14 @@ jobs:
               });
               const trusted = Buffer.from(repoContent.content, 'base64').toString()
                 .split('\n').map(l => l.trim()).filter(l => l && !l.startsWith('#'));
+              const normalize = (n) => n ? n.replace(/\[bot\]$/, '') : n;
               const trustedSet = new Set(['thepagent', 'copilot', 'github-actions', ...trusted]);
 
               const { data: commits } = await github.rest.pulls.listCommits({
                 owner, repo, pull_number: prNumber, per_page: 100,
               });
               const invalidAuthors = [...new Set(
-                commits.map(c => c.commit.author?.name).filter(n => n && !trustedSet.has(n))
+                commits.map(c => c.commit.author?.name).filter(n => n && !trustedSet.has(normalize(n)))
               )];
               if (invalidAuthors.length) {
                 core.info(`PR #${prNumber} has untrusted commit authors: ${invalidAuthors.join(', ')}; skip.`);
