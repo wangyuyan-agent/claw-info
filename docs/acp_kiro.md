@@ -60,7 +60,7 @@ const child = spawn(command, args, { stdio: [...], detached: true });
 process.kill(-child.pid, "SIGTERM");  // 包含 kiro-cli-chat
 ```
 
-完整實作見：https://github.com/thepagent/acpx/pull/42
+完整實作見：https://github.com/openclaw/acpx/pull/42
 
 ### Build 與部署
 
