@@ -12,19 +12,19 @@
 │          │     │                                             │
 │ 用戶訊息 │     │  ① <agent>-relay hook (message_received)    │
 │          │     │     │                                       │
-└──────────┘     │     │  acpx kiro prompt -s klaw-tg -f -     │
+└──────────┘     │     │  acpx kiro prompt -s my-kiro-tg -f -     │
      ▲           │     │  (stdin，無 shell quoting 問題)        │
      │           │     ▼                                       │
      │           │  ┌──────────────────────┐                  │
      │           │  │  Kiro ACP session    │                  │
-     │           │  │  klaw-tg             │                  │
+     │           │  │  my-kiro-tg             │                  │
      │           │  └──────────┬───────────┘                  │
      │           │             │ reply text                    │
      │           │             ▼                               │
      └───────────│  fetch api.telegram.org/sendMessage         │
                  │  (直接打 Bot API，繞過 openclaw 訊息系統)    │
                  │                                             │
-                 │  ② klaw agent (SOUL: "Output NO_REPLY.")    │
+                 │  ② my-kiro-relay agent (SOUL: "Output NO_REPLY.")    │
                  │     └▶ 偶爾輸出 NO（閃一下即刪，可接受）    │
                  └─────────────────────────────────────────────┘
 ```
@@ -68,13 +68,13 @@ cp dist/cli.js "$ACPX_DIST"
 
 ```json
 // agents.list
-{ "id": "klaw", "name": "Klaw", "workspace": "/home/<user>/.openclaw/workspace-klaw" }
+{ "id": "my-kiro-relay", "name": "Klaw", "workspace": "/home/<user>/.openclaw/workspace-my-kiro-relay" }
 
 // bindings
-{ "agentId": "klaw", "match": { "channel": "telegram", "accountId": "klaw" } }
+{ "agentId": "my-kiro-relay", "match": { "channel": "telegram", "accountId": "my-kiro-relay" } }
 
 // channels.telegram.accounts
-"klaw": {
+"my-kiro-relay": {
   "name": "Klaw",
   "botToken": "<YOUR_BOT_TOKEN>",
   "dmPolicy": "pairing",
@@ -88,7 +88,7 @@ cp dist/cli.js "$ACPX_DIST"
 ## 步驟二：建立 workspace
 
 ```bash
-mkdir -p ~/.openclaw/workspace-klaw
+mkdir -p ~/.openclaw/workspace-my-kiro-relay
 ```
 
 ### SOUL.md
@@ -105,14 +105,14 @@ Output NO_REPLY.
 ## 步驟三：建立 hook
 
 ```bash
-mkdir -p ~/.openclaw/hooks/klaw-kiro-relay
+mkdir -p ~/.openclaw/hooks/my-kiro-relay-hook
 ```
 
 ### HOOK.md
 
 ```markdown
 ---
-name: klaw-kiro-relay
+name: my-kiro-relay-hook
 description: "Relay Klaw Telegram DM messages to Kiro via acpx and push reply back"
 metadata:
   { "openclaw": { "emoji": "🔀", "events": ["message:received"] } }
@@ -125,7 +125,7 @@ metadata:
 import { execSync } from "child_process";
 
 const ACPX = "/home/<user>/.npm-global/lib/node_modules/openclaw/extensions/acpx/node_modules/.bin/acpx";
-const SESSION = "klaw-tg";
+const SESSION = "my-kiro-tg";
 const BOT_TOKEN = "<YOUR_BOT_TOKEN>";
 
 async function sendTelegram(chatId: string, text: string) {
@@ -138,7 +138,7 @@ async function sendTelegram(chatId: string, text: string) {
 
 const handler = async (event) => {
   if (event.type !== "message" || event.action !== "received") return;
-  if (!event.sessionKey?.startsWith("agent:klaw:telegram:direct:")) return;
+  if (!event.sessionKey?.startsWith("agent:my-kiro-relay:telegram:direct:")) return;
 
   const content = event.context?.content;
   if (!content) return;
@@ -181,7 +181,7 @@ export default handler;
   "internal": {
     "enabled": true,
     "entries": {
-      "klaw-kiro-relay": { "enabled": true }
+      "my-kiro-relay-hook": { "enabled": true }
     }
   }
 }
@@ -194,7 +194,7 @@ export default handler;
 ```bash
 systemctl --user restart openclaw-gateway.service
 sleep 3
-openclaw hooks list  # 確認 klaw-kiro-relay ✓ ready
+openclaw hooks list  # 確認 my-kiro-relay-hook ✓ ready
 ```
 
 ---
@@ -237,9 +237,9 @@ openclaw hooks list  # 確認 ✓ ready
 
 ```
 ~/.openclaw/openclaw.json
-~/.openclaw/workspace-klaw/SOUL.md                 # Output NO_REPLY.
-~/.openclaw/hooks/klaw-kiro-relay/HOOK.md
-~/.openclaw/hooks/klaw-kiro-relay/handler.ts
+~/.openclaw/workspace-my-kiro-relay/SOUL.md                 # Output NO_REPLY.
+~/.openclaw/hooks/my-kiro-relay-hook/HOOK.md
+~/.openclaw/hooks/my-kiro-relay-hook/handler.ts
 ```
 
 ---

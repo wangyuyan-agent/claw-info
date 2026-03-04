@@ -10,23 +10,23 @@
 ┌──────────┐     ┌─────────────────────────────────────────────┐
 │ Telegram │────▶│  openclaw gateway                           │
 │          │     │                                             │
-│ 用戶訊息 │     │  ① guan-yu-codex-relay hook                 │
+│ 用戶訊息 │     │  ① my-codex-relay-hook hook                 │
 │          │     │     │  (message_received)                   │
 └──────────┘     │     │                                       │
      ▲           │     │  acpx --format json codex prompt      │
-     │           │     │  -s guan-yu-tg -f -  (stdin)          │
+     │           │     │  -s my-codex-tg -f -  (stdin)          │
      │           │     │  + python3 解析 JSON chunks            │
      │           │     ▼                                       │
      │           │  ┌──────────────────────┐                  │
      │           │  │  Codex ACP session   │                  │
-     │           │  │  guan-yu-tg          │                  │
+     │           │  │  my-codex-tg          │                  │
      │           │  └──────────┬───────────┘                  │
      │           │             │ reply text                    │
      │           │             ▼                               │
      └───────────│  fetch api.telegram.org/sendMessage         │
                  │  (直接打 Bot API，繞過 openclaw 訊息系統)    │
                  │                                             │
-                 │  ② guan-yu agent (SOUL: "Output NO_REPLY.") │
+                 │  ② my-codex-relay agent (SOUL: "Output NO_REPLY.") │
                  └─────────────────────────────────────────────┘
 ```
 
@@ -57,13 +57,13 @@
 
 ```json
 // agents.list
-{ "id": "guan-yu", "name": "Guan Yu", "workspace": "/home/<user>/.openclaw/workspace-guan-yu" }
+{ "id": "my-codex-relay", "name": "Guan Yu", "workspace": "/home/<user>/.openclaw/workspace-my-codex-relay" }
 
 // bindings
-{ "agentId": "guan-yu", "match": { "channel": "telegram", "accountId": "guan-yu" } }
+{ "agentId": "my-codex-relay", "match": { "channel": "telegram", "accountId": "my-codex-relay" } }
 
 // channels.telegram.accounts
-"guan-yu": {
+"my-codex-relay": {
   "name": "Guan Yu",
   "botToken": "<YOUR_BOT_TOKEN>",
   "dmPolicy": "pairing",
@@ -77,7 +77,7 @@
 ## 步驟二：建立 workspace
 
 ```bash
-mkdir -p ~/.openclaw/workspace-guan-yu
+mkdir -p ~/.openclaw/workspace-my-codex-relay
 ```
 
 ### SOUL.md
@@ -91,15 +91,15 @@ Output NO_REPLY.
 ## 步驟三：建立 hook
 
 ```bash
-mkdir -p ~/.openclaw/hooks/guan-yu-codex-relay
+mkdir -p ~/.openclaw/hooks/my-codex-relay-hook
 ```
 
 ### HOOK.md
 
 ```markdown
 ---
-name: guan-yu-codex-relay
-description: "Relay guan-yu Telegram DM messages to Codex via acpx and push reply back"
+name: my-codex-relay-hook
+description: "Relay my-codex-relay Telegram DM messages to Codex via acpx and push reply back"
 metadata:
   { "openclaw": { "emoji": "⚔️", "events": ["message:received"] } }
 ---
@@ -114,11 +114,11 @@ import { tmpdir } from "os";
 import { join } from "path";
 
 const ACPX = "/home/<user>/.npm-global/lib/node_modules/openclaw/extensions/acpx/node_modules/.bin/acpx";
-const SESSION = "guan-yu-tg";
+const SESSION = "my-codex-tg";
 const BOT_TOKEN = "<YOUR_BOT_TOKEN>";
 
 // Write parse script to temp file to avoid shell quoting issues
-const PARSE_SCRIPT = join(tmpdir(), "guan-yu-parse.py");
+const PARSE_SCRIPT = join(tmpdir(), "my-codex-parse.py");
 writeFileSync(PARSE_SCRIPT, `
 import sys, json
 chunks = []
@@ -150,7 +150,7 @@ async function sendTelegram(chatId: string, text: string) {
 
 const handler = async (event) => {
   if (event.type !== "message" || event.action !== "received") return;
-  if (!event.sessionKey?.startsWith("agent:guan-yu:telegram:direct:")) return;
+  if (!event.sessionKey?.startsWith("agent:my-codex-relay:telegram:direct:")) return;
 
   const content = event.context?.content;
   if (!content) return;
@@ -193,7 +193,7 @@ export default handler;
   "internal": {
     "enabled": true,
     "entries": {
-      "guan-yu-codex-relay": { "enabled": true }
+      "my-codex-relay-hook": { "enabled": true }
     }
   }
 }
@@ -206,7 +206,7 @@ export default handler;
 ```bash
 systemctl --user restart openclaw-gateway.service
 sleep 3
-openclaw hooks list  # 確認 guan-yu-codex-relay ✓ ready
+openclaw hooks list  # 確認 my-codex-relay-hook ✓ ready
 ```
 
 ---
@@ -221,8 +221,8 @@ journalctl --user -u openclaw-gateway.service --since "5 min ago" --no-pager | t
 ### Codex session 壞掉
 ```bash
 ACPX=$(find ~/.npm-global -path "*/extensions/acpx/node_modules/.bin/acpx" | head -1)
-cd $HOME && $ACPX codex sessions close guan-yu-tg 2>/dev/null
-$ACPX codex sessions new --name guan-yu-tg
+cd $HOME && $ACPX codex sessions close my-codex-tg 2>/dev/null
+$ACPX codex sessions new --name my-codex-tg
 ```
 
 ---
@@ -231,9 +231,9 @@ $ACPX codex sessions new --name guan-yu-tg
 
 ```
 ~/.openclaw/openclaw.json
-~/.openclaw/workspace-guan-yu/SOUL.md                  # Output NO_REPLY.
-~/.openclaw/hooks/guan-yu-codex-relay/HOOK.md
-~/.openclaw/hooks/guan-yu-codex-relay/handler.ts
+~/.openclaw/workspace-my-codex-relay/SOUL.md                  # Output NO_REPLY.
+~/.openclaw/hooks/my-codex-relay-hook/HOOK.md
+~/.openclaw/hooks/my-codex-relay-hook/handler.ts
 ```
 
 ---

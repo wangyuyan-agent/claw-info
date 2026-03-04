@@ -10,22 +10,22 @@
 ┌──────────┐     ┌─────────────────────────────────────────────┐
 │ Telegram │────▶│  openclaw gateway                           │
 │          │     │                                             │
-│ 用戶訊息 │     │  ① keroro-gemini-relay hook                 │
+│ 用戶訊息 │     │  ① my-gemini-relay-hook hook                 │
 │          │     │     │  (message_received)                   │
 └──────────┘     │     │                                       │
      ▲           │     │  acpx --agent "gemini --experimental- │
-     │           │     │  acp" prompt -s keroro-tg -f - (stdin)│
+     │           │     │  acp" prompt -s my-gemini-tg -f - (stdin)│
      │           │     ▼                                       │
      │           │  ┌──────────────────────┐                  │
      │           │  │  Gemini ACP session  │                  │
-     │           │  │  keroro-tg           │                  │
+     │           │  │  my-gemini-tg           │                  │
      │           │  └──────────┬───────────┘                  │
      │           │             │ reply text                    │
      │           │             ▼                               │
      └───────────│  fetch api.telegram.org/sendMessage         │
                  │  (直接打 Bot API，繞過 openclaw 訊息系統)    │
                  │                                             │
-                 │  ② keroro agent (SOUL: "Output NO_REPLY.")  │
+                 │  ② my-gemini-relay agent (SOUL: "Output NO_REPLY.")  │
                  └─────────────────────────────────────────────┘
 ```
 
@@ -62,13 +62,13 @@ npm install -g @google/gemini-cli@latest
 
 ```json
 // agents.list
-{ "id": "keroro", "name": "Keroro", "workspace": "/home/<user>/.openclaw/workspace-keroro" }
+{ "id": "my-gemini-relay", "name": "Keroro", "workspace": "/home/<user>/.openclaw/workspace-my-gemini-relay" }
 
 // bindings
-{ "agentId": "keroro", "match": { "channel": "telegram", "accountId": "keroro" } }
+{ "agentId": "my-gemini-relay", "match": { "channel": "telegram", "accountId": "my-gemini-relay" } }
 
 // channels.telegram.accounts
-"keroro": {
+"my-gemini-relay": {
   "name": "Keroro",
   "botToken": "<YOUR_BOT_TOKEN>",
   "dmPolicy": "pairing",
@@ -82,7 +82,7 @@ npm install -g @google/gemini-cli@latest
 ## 步驟二：建立 workspace
 
 ```bash
-mkdir -p ~/.openclaw/workspace-keroro
+mkdir -p ~/.openclaw/workspace-my-gemini-relay
 ```
 
 ### SOUL.md
@@ -96,15 +96,15 @@ Output NO_REPLY.
 ## 步驟三：建立 hook
 
 ```bash
-mkdir -p ~/.openclaw/hooks/keroro-gemini-relay
+mkdir -p ~/.openclaw/hooks/my-gemini-relay-hook
 ```
 
 ### HOOK.md
 
 ```markdown
 ---
-name: keroro-gemini-relay
-description: "Relay keroro Telegram DM messages to Gemini via acpx and push reply back"
+name: my-gemini-relay-hook
+description: "Relay my-gemini-relay Telegram DM messages to Gemini via acpx and push reply back"
 metadata:
   { "openclaw": { "emoji": "🐸", "events": ["message:received"] } }
 ---
@@ -117,7 +117,7 @@ import { execSync } from "child_process";
 
 const ACPX = "/home/<user>/.npm-global/lib/node_modules/openclaw/extensions/acpx/node_modules/.bin/acpx";
 const AGENT = "gemini --experimental-acp";
-const SESSION = "keroro-tg";
+const SESSION = "my-gemini-tg";
 const BOT_TOKEN = "<YOUR_BOT_TOKEN>";
 
 async function sendTelegram(chatId: string, text: string) {
@@ -130,7 +130,7 @@ async function sendTelegram(chatId: string, text: string) {
 
 const handler = async (event) => {
   if (event.type !== "message" || event.action !== "received") return;
-  if (!event.sessionKey?.startsWith("agent:keroro:telegram:direct:")) return;
+  if (!event.sessionKey?.startsWith("agent:my-gemini-relay:telegram:direct:")) return;
 
   const content = event.context?.content;
   if (!content) return;
@@ -170,7 +170,7 @@ export default handler;
   "internal": {
     "enabled": true,
     "entries": {
-      "keroro-gemini-relay": { "enabled": true }
+      "my-gemini-relay-hook": { "enabled": true }
     }
   }
 }
@@ -183,7 +183,7 @@ export default handler;
 ```bash
 systemctl --user restart openclaw-gateway.service
 sleep 3
-openclaw hooks list  # 確認 keroro-gemini-relay ✓ ready
+openclaw hooks list  # 確認 my-gemini-relay-hook ✓ ready
 ```
 
 ---
@@ -198,8 +198,8 @@ journalctl --user -u openclaw-gateway.service --since "5 min ago" --no-pager | t
 ### Gemini session 壞掉
 ```bash
 ACPX=$(find ~/.npm-global -path "*/extensions/acpx/node_modules/.bin/acpx" | head -1)
-cd $HOME && $ACPX --agent "gemini --experimental-acp" sessions close keroro-tg 2>/dev/null
-$ACPX --agent "gemini --experimental-acp" sessions new --name keroro-tg
+cd $HOME && $ACPX --agent "gemini --experimental-acp" sessions close my-gemini-tg 2>/dev/null
+$ACPX --agent "gemini --experimental-acp" sessions new --name my-gemini-tg
 ```
 
 ---
@@ -208,9 +208,9 @@ $ACPX --agent "gemini --experimental-acp" sessions new --name keroro-tg
 
 ```
 ~/.openclaw/openclaw.json
-~/.openclaw/workspace-keroro/SOUL.md                   # Output NO_REPLY.
-~/.openclaw/hooks/keroro-gemini-relay/HOOK.md
-~/.openclaw/hooks/keroro-gemini-relay/handler.ts
+~/.openclaw/workspace-my-gemini-relay/SOUL.md                   # Output NO_REPLY.
+~/.openclaw/hooks/my-gemini-relay-hook/HOOK.md
+~/.openclaw/hooks/my-gemini-relay-hook/handler.ts
 ```
 
 ---
