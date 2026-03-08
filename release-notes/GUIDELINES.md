@@ -5,7 +5,7 @@ This document defines the guidelines for generating release notes for each OpenC
 ## File Naming Convention
 
 - **Filename**: `release-notes/YYYY-MM-DD.md`
-- **Date**: Use the release date (e.g., `2026-02-15.md`)
+- **Date**: Use the version date from the release tag (e.g., `v2026.3.7` → `2026-03-07.md`), **not** the date the notes were authored or published.
 - **Header**: Use version only in the title (e.g., `# OpenClaw v2026.02.15 版本發佈說明`). Do not include the date in the title to avoid timezone confusion.
 
 ## Document Structure
