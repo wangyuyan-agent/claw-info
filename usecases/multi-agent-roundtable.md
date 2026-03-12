@@ -35,7 +35,7 @@ Roundtable 的核心價值：
 
 ## 三層架構
 
-```
+```text
 ┌──────────────────────────────────────────────────────────┐
 │ 第一層：議題定義（What）                                  │
 │  topic / goal / constraints / success criteria           │
@@ -91,7 +91,7 @@ Roundtable 的核心價值：
 
 ## 標準流程（Council Loop）
 
-```
+```text
 ┌──────────────────────────────────────────────────────────┐
 │ Round 0: 主持人定義議題邊界                              │
 │  目標 / 約束 / 成功標準 / 時間窗口                       │
@@ -157,7 +157,7 @@ OpenClaw 的 `sessions_spawn` + subagent 機制可直接實作全流程，不需
 
 ### 最小編排步驟
 
-```
+```text
 1. main session 產生統一題面
    （topic + goal + constraints + success criteria）
         │
@@ -185,26 +185,6 @@ OpenClaw 的 `sessions_spawn` + subagent 機制可直接實作全流程，不需
 6. main 輸出最終決策包
 ```
 
-### Workspace 掛載與路徑一致性
-
-若 subagent 需要讀寫主 agent 的 workspace 檔案（如摘要、記憶、分析結果），使用 `attachAs` 掛載：
-
-```javascript
-sessions_spawn({
-  task: "...",
-  runtime: "subagent",
-  mode: "run",
-  attachAs: { mountPath: "/workspace" }
-})
-```
-
-> **注意事項：**
->
-> - subagent 不繼承父 session 的工作目錄，`attachAs.mountPath` 決定掛載後的實際路徑
-> - task prompt 中應使用**掛載後的絕對路徑**（例如 `/workspace/memory/today.md`），而非假設繼承父 workspace 的相對路徑
-> - 若多個 subagent 並行寫入同一個檔案，需在 task 設計中做分工避免衝突（各寫獨立檔案，由 main 合併）
-> - 路徑錯誤排查：先確認 `mountPath` 設定，再確認 task prompt 中的路徑是否使用絕對路徑
-
 ### 主持人 Prompt 骨架（可直接複用）
 
 ```
@@ -228,62 +208,98 @@ sessions_spawn({
 
 ## 真實執行紀錄
 
-> 以下為 2026-03-10 的實際執行紀錄，議題取自 claw-info 本身的 review 策略問題。
+**環境：** OpenClaw v2026.3.11，Linux VPS（icern）
+**時間：** 2026-03-13
+**議題：** claw-info 貢獻策略——Agent 應優先做 release notes 還是 usecases？資源有限時如何分配？
 
-**議題**：claw-info 的 PR review 標準應該寬還是嚴？大 PR 是否應一律要求拆分，還是視內容品質決定？
+**執行架構：** main session 作主持人，3 個並行 subagent 各扮演 A/B/C，1 個 subagent 扮演主席。共 4 輪。
 
-**執行環境**：OpenClaw main session 作主持人，3 個並行 subagent 各扮演 A/B/C，1 個 subagent 扮演主席。共 4 輪，約 8 分鐘完成。
+**時間紀錄：**
 
----
-
-### Round 3 追問（核心分歧）
-
-主持人識別到最高影響力問題：
-
-> 「如果強制拆分讓貢獻者製造假小 PR，而完全不拆讓 reviewer 疲勞放行錯誤——哪個失敗模式對 claw-info 長期健康傷害更大？」
-
-三方回答：**一致認為 reviewer 疲勞放行錯誤傷害更深**
-
-- A：疲勞放行的壞內容靜靜躺進 main，沒有警報燈；PR description 強制要求可同時預防兩個失敗模式
-- B：假小 PR 可觀測可查，疲勞放行不可觀測；超閾值強制 ≥2 reviewer 含 domain owner 是最小機制
-- C：可見的博弈遊戲遠比不可見的品質滑坡好治；為 reviewer 設每週負載上限
+| 輪次 | 內容 | 耗時 |
+|------|------|------|
+| R1 | 3 個 subagent 並行首答 | 最長 21s |
+| R2 | 3 個 subagent 匿名互評 | 最長 34s |
+| R3 | 3 個 subagent 追問核心分歧 | 最長 27s |
+| R4 | 主席 subagent 定稿 | 61s |
+| **總計** | | **約 7 分鐘** |
 
 ---
 
-### Round 4 主席定稿
+### Round 1：並行首答
+
+三個角色同時收到題目，獨立作答：
+
+- **A（Builder）**：Release Notes 優先 7:3。低幻覺風險，可模板化自動化；usecases 僅在社群有 ≥2 次真實案例時才做。
+- **B（Skeptic）**：Release Notes 優先 7:3。usecases 品質衰減快，必須錨定版本，不可孤立生成，禁止孤立輸出。
+- **C（Systems）**：Usecases 優先 7:3。複利結構，降低新用戶門檻有二階效應；Release Notes 改批次降頻處理。
+
+**主持人觀察：** A/B 方向一致，C 完全相反。核心張力在「複利論 vs 版本衰減風險」。
+
+---
+
+### Round 2：匿名互評
+
+打散身份後，三者互評。**三個互評者全部一致指向同一論點：**
+
+> **Z（B）的「版本錨定 / 品質衰減」論是最能改變判斷的論點。** 一篇過期 usecase 以「權威姿態」主動誤導，傷害高於缺席。這直接瓦解 X（C）複利論的前提。
+
+---
+
+### Round 3：主持追問核心分歧
+
+主持人識別到最高影響力問題並下發：
+
+> **「過期 usecase 比完全沒有 usecase，對 claw-info 長期健康的傷害哪個更深？如果版本衰減問題可以被設計解決，X 的複利論是否仍然成立？」**
+
+**三者完全收斂：**
+
+- 過期 usecase 傷害更深：「謊言」vs「缺席」，虛假確定性毒性高一個量級，且引發傳染效應
+- 版本衰減可解：版本錨點標記 + CI 自動掃描/標記 + TTL 降級三層機制
+- X 的複利論成立，**前提是反衰減機制到位且被持續維護**；機制缺位時，release notes 優先
+
+---
+
+### Round 4：主席定稿
 
 **共識**
 
-1. reviewer 疲勞是最深的風險，機制設計以「保護 reviewer 注意力」為第一優先
-2. 行數不等於認知負荷，硬閾值可被博弈，但可作預警信號
-3. 強制 PR description（實質內容）是最低成本最高槓桿的品質門檻
-4. 超閾值 PR 強制 ≥2 reviewer（含 domain owner）是三方唯一具體落地的共識
-5. 季度熵審計是懸空機制，無執行者不應寫入規範
+1. 過期 usecase 比沒有 usecase 傷害更深——「謊言」的代價高於「缺席」
+2. Release Notes 是無條件安全底線：天然帶時間戳、永不過期、幻覺風險低、可自動化
+3. 版本錨定是 usecase 的生死線：脫離版本錨點孤立生成必然衰減，衰減後即成負資產
+4. 複利論（C）成立，但前提是反衰減機制到位且被持續維護
+5. 核心決策變量是**維護能力**，不是內容優先級
 
 **分歧**
 
-| 分歧點 | 反轉訊號 |
-|--------|---------|
-| 閾值是否應硬性存在 | 出現「description 好但實質無法 review 的大 PR」時硬閾值派得分 |
-| reviewer 負載上限可行性 | 出現明顯漏審記錄則負載派得分；PR 積壓則彈性派得分 |
-| 豁免門檻高低 | 豁免申請成為摩擦點則低門檻派得分 |
+三輪後已完全收斂，無實質未解分歧。
+
+唯一條件性殘留：維護能力的評估尚無具體標準。反轉訊號：CI 機制上線後 3 個月內，若出現 ≥2 篇過期但未被標記的 usecase 活躍存在，則判定維護能力不足。
 
 **主建議**
 
-強制 PR description（非空白、非套話）+ 超 300 行觸發 ≥2 reviewer 含 domain owner，兩條均可 bot 自動執行。
+1. **預設策略：Release Notes 7、Usecases 3**，不做反轉，除非反衰減機制已被驗證可持續運行
+2. **先建機制，後寫 usecase**：版本錨點格式 + CI 自動掃描 + TTL 降級（跨 2 個 major 版本自動標 `[OUTDATED]`）就緒前，usecase 生產凍結
+3. **Usecase 准入雙重門檻**：（a）社群 ≥2 次可驗證真實案例；（b）反衰減機制已上線且運行正常
+4. **Release Notes 批次化自動化**：每次 tag 推送後觸發草稿生成，降低邊際成本
+5. **每季度 usecase 存活審計**：掃描版本錨點有效性，過期者降級或移除
 
 **明確放棄**
 
-- ❌ 季度熵審計（無執行者，懸空）
-- ❌「一個 PR 服務一個文件目的」作為可執行邊界（定義模糊）
-- ❌ 強制一律拆分大 PR（懲罰合理貢獻）
+| 放棄選項 | 原因 |
+|----------|------|
+| 孤立生成 usecase（無版本錨點） | 必然衰減，衰減後成負資產 |
+| 反衰減機制就緒前擴大 usecase 產量 | 複利前提不成立時，產量越高負債越大 |
+| C 的原始立場（usecases 優先 7:3） | 版本衰減論瓦解其複利前提，機制需先被驗證 |
+| 「有 usecase 總比沒有好」的直覺 | Round 3 明確推翻 |
 
-**行動項**
+**止損條件**
 
-1. PR template 加強制 description 欄，bot 檢查非空且非預設套話
-2. >300 行 diff 自動觸發 require 2 reviewers（含 domain owner）
-3. CONTRIBUTING.md 寫明兩條規則及豁免申請方式
-4. 試行 6 週後統計數據，決定是否調整閾值
+以下任一觸發，切換回純 Release Notes 優先：
+1. CI 機制上線後 3 個月內，≥2 篇過期 usecase 未被自動標記且活躍存在
+2. 連續 2 個週期，usecase 占比 > 40% 且有未過雙重門檻就發布的案例
+3. 用戶明確反饋「按 usecase 操作後步驟已過期」≥3 次
+4. CI 掃描工具下線且 2 週內無法恢復
 
 ---
 
@@ -335,6 +351,6 @@ sessions_spawn({
 
 ## 相關連結
 
+- `usecases/parallel-subagent-delegation.md`：並行 spawn 多個子 Agent 的基礎用法
 - `usecases/approval-first-workflow.md`：高風險操作的審批閘門設計
-- `usecases/cron-automated-workflows.md`：OpenClaw 自動化工作流
-- Issue #305：本文件的提案來源
+- Issue [#305](https://github.com/thepagent/claw-info/issues/305)：本文件的提案來源
