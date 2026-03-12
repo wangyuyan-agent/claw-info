@@ -63,7 +63,18 @@ Roundtable 的核心價值：
 
 ## 角色設計
 
-建議五個角色：
+### 如何選擇規模
+
+| 場景 | 建議架構 | 說明 |
+|------|---------|------|
+| 日常決策、低風險議題 | **3 人**：Moderator + Builder + Skeptic | 快速收斂，10–15 分鐘 |
+| 複雜/高影響/難逆轉決策 | **5 人**：加入 Systems + Chairman | 完整辯證，確保二階效應與整合品質 |
+
+**從 3 人開始，感覺同質化或議題複雜時再升級到 5 人。**
+
+---
+
+### 完整五角色清單
 
 | 角色 | 職責 | 偏向 |
 |------|------|------|
@@ -74,6 +85,7 @@ Roundtable 的核心價值：
 | **主席（Chairman）** | 整合與裁決，不新增未討論的新事實 | 整合 |
 
 > 可依題目替換角色：法務、合規、交易、產品、運維。
+> 3 人版省略 Systems 與獨立 Chairman，由 Moderator 兼任裁決。
 
 ---
 
@@ -172,6 +184,26 @@ OpenClaw 的 `sessions_spawn` + subagent 機制可直接實作全流程，不需
         ▼
 6. main 輸出最終決策包
 ```
+
+### Workspace 掛載與路徑一致性
+
+若 subagent 需要讀寫主 agent 的 workspace 檔案（如摘要、記憶、分析結果），使用 `attachAs` 掛載：
+
+```javascript
+sessions_spawn({
+  task: "...",
+  runtime: "subagent",
+  mode: "run",
+  attachAs: { mountPath: "/workspace" }
+})
+```
+
+> **注意事項：**
+>
+> - subagent 不繼承父 session 的工作目錄，`attachAs.mountPath` 決定掛載後的實際路徑
+> - task prompt 中應使用**掛載後的絕對路徑**（例如 `/workspace/memory/today.md`），而非假設繼承父 workspace 的相對路徑
+> - 若多個 subagent 並行寫入同一個檔案，需在 task 設計中做分工避免衝突（各寫獨立檔案，由 main 合併）
+> - 路徑錯誤排查：先確認 `mountPath` 設定，再確認 task prompt 中的路徑是否使用絕對路徑
 
 ### 主持人 Prompt 骨架（可直接複用）
 
