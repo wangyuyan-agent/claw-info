@@ -54,11 +54,13 @@ jobs:
               .split('\n').map(l => l.trim()).filter(l => l && !l.startsWith('#'));
             const trustedSet = new Set(['thepagent', 'copilot', 'github-actions', ...trusted]);
 
-            // Check each commit's author name against the trusted set (case-insensitive substring match)
+            // IMPORTANT: We MUST check GitHub login (c.author?.login), NOT git commit author name (c.commit.author.name).
+            // Git author name is a free-text field and may differ from the GitHub login in TRUSTED_AGENTS.md.
+            // Check each commit's GitHub login against the trusted set
             const { data: commits } = await github.rest.pulls.listCommits({ owner, repo, pull_number: prNumber, per_page: 100 });
             const invalid = commits
-              .map(c => c.commit.author.name)
-              .filter(name => name && ![...trustedSet].some(t => name.toLowerCase().includes(t.toLowerCase())));
+              .map(c => c.author?.login)
+              .filter(login => login && !trustedSet.has(login.replace(/\[bot\]$/, '')));
             const uniqueInvalid = [...new Set(invalid)];
 
             if (uniqueInvalid.length) {
