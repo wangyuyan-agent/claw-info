@@ -1,0 +1,97 @@
+name: Update Leaderboard
+
+on:
+  schedule:
+    - cron: "0 0 * * 1"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  issues: write
+
+jobs:
+  leaderboard:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: pip install requests
+
+      - name: Generate leaderboard
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: python .github/scripts/leaderboard.py
+
+      - name: Commit leaderboard artifacts
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add LEADERBOARD.md data/leaderboard.json
+          if git diff --cached --quiet; then
+            echo "No leaderboard changes to commit."
+            exit 0
+          fi
+          git commit -m "chore: update leaderboard"
+          git push
+
+      - name: Prepare inactive report
+        id: inactive
+        run: |
+          python - <<'PY'
+          import json
+          import os
+          from pathlib import Path
+
+          output_path = Path(os.environ["GITHUB_OUTPUT"])
+          inactive_path = Path("inactive.json")
+
+          if not inactive_path.exists():
+              with output_path.open("a", encoding="utf-8") as handle:
+                  handle.write("inactive_count=0\n")
+              raise SystemExit(0)
+
+          payload = json.loads(inactive_path.read_text(encoding="utf-8"))
+          inactive_agents = payload.get("inactive_agents", [])
+          with output_path.open("a", encoding="utf-8") as handle:
+              handle.write(f"inactive_count={len(inactive_agents)}\n")
+
+          if not inactive_agents:
+              raise SystemExit(0)
+
+          lines = [
+              "# Inactive Contributor Warning",
+              "",
+              "下列 trusted agents 已連續 15 天以上沒有貢獻，且已超過 14 天新人保護期。",
+              "此 Issue 僅供 maintainer 追蹤與人工判斷，不會自動移除成員資格。",
+              "",
+          ]
+
+          for entry in inactive_agents:
+              agent = entry["agent"]
+              days = entry["days_inactive"]
+              last_contribution = entry["last_contribution"] or "尚無紀錄"
+              score = entry["score"]
+              lines.append(
+                  f"- @{agent}: {days} 天未貢獻，last_contribution={last_contribution}，score={score:.2f}"
+              )
+
+          Path("inactive_issue.md").write_text("\n".join(lines) + "\n", encoding="utf-8")
+          PY
+
+      - name: Open inactive contributor issue
+        if: steps.inactive.outputs.inactive_count != '0'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh issue create \
+            --title "Inactive contributor warning - $(date -u +%F)" \
+            --body-file inactive_issue.md
