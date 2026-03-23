@@ -177,15 +177,14 @@ let lastReceivedFrom: string = '';  // 橋接 message_received → agent_end
 // let currentTurnTools: ToolCallRecord[] = [];
 ```
 
-**⚠️ 已知限制：`lastReceivedFrom` 的高並發風險**
+**⚠️ 已知限制 1：同一用戶的並發 run（Line 163）。** `from` 是用戶維度，不是 run 維度。同一用戶同時觸發多個 run（webhook 回呼、cron 任務、主對話並發）時，tool call 記錄會混入同一個 bucket。根本解法是 `from + runId` 組合 key，但 `message_received` 和 `agent_end` 沒有 `runId` 字段，需要通過 `after_tool_call`（有 `runId`）建立 `from → active runId` 映射表。此映射列為 **Phase 2 第一優先級**。
 
-`lastReceivedFrom` 是 plugin 實例級別的共享變量。若同一 OpenClaw 實例下同時有多個不同來源（不同 channel 或不同 user）的請求並發觸發，`message_received` 更新 `lastReceivedFrom` 後，`after_tool_call` 可能錯誤關聯到另一個 from 的 state bucket（競態條件）。
+**⚠️ 已知限制 2：並發衝突的量化可見性。** MVP 在 audit log 中記錄每次 from-switch 降級事件（event type: `FROM_SWITCH_DEGRADED`），可通過 `grep FROM_SWITCH_DEGRADED audit.log | wc -l` 量化命中率。配置中預留 `useRunIdMapping: boolean` 旗標（默認 false），Phase 2 實現後用戶可選擇啟用。
 
-**MVP 接受此風險的理由**：OpenClaw 是 personal assistant，通常單 channel 單 user，高並發場景極少出現。
-
-**Phase 2 解法**：`after_tool_call` 有 `runId` 字段，可以建立 `runId → from` 的映射表，完全消除橋接依賴，實現精確的 per-run 隔離。優先級在多用戶場景需求出現時再推進。
-
-**MVP 防呆策略**：當短時間內（3 秒）`from` 在不同來源間切換時（可能是多用戶並發或系統 session 交叉），監工自動降級為「僅審計不告警」，避免因 state 串擾導致的誤報。降級狀態僅影響當前 turn 的告警，不影響審計日誌記錄。
+**防呆策略（降級機制）**：當短時間內（3 秒）`from` 在不同來源間切換時，監工降級為「僅審計不告警」。降級時：
+- 仍寫入 audit log，標記 event type `FROM_SWITCH_DEGRADED`，便於搜索和匯總
+- 不靜默丟棄——真正的偷懶事件如果落在降級窗口，會在 audit log 中留痕，人類可事後 review
+- Phase 2 的 `from + runId` 映射啟用後，此降級機制可被替代
 
 ### 4.3 數據來源
 
@@ -500,6 +499,7 @@ L2 判定結果寫入審計日誌文件（`~/.openclaw/watchdog/audit.log`），
 | session.jsonl 被篡改 | Gateway 寫入，agent 無修改權限 |
 | 監工 plugin 自身被 prompt injection | Plugin 不接受任何來自 agent 的指令，純規則驅動 |
 | 監工失效時的空窗期 | L0/L1 是同步的，幾乎無失效可能；L2 異步失敗不影響 L0/L1 |
+| **空洞 tool call 繞過 L0/L1** | **已知攻擊面。** Agent 可發起無關的 tool call（如 exec 無意義命令）使 `tools.length > 0`，從而通過 L0 檢查。L0/L1 只檢測「有沒有做」和「類型對不對」，**不檢測「做的事和任務是否相關」**——後者是 L2 語義層的職責。Phase 2 的 L2 實現將覆蓋此攻擊面。 |
 
 ---
 
@@ -592,9 +592,10 @@ let lastReceivedFrom: string = '';                // 橋接無 from 的 hooks
 
 ### Phase 2：增強（目標：好用）
 
+- [ ] **`from + runId` 映射表**（第一優先級）：解決同一用戶並發 run 的 state 串擾問題
 - [ ] 實現 L1a verb 提取 + YAML 規則查表
 - [ ] 實現待驗證隊列（多輪任務支持）
-- [ ] 實現 L2 Gemini Flash 異步語義判斷
+- [ ] 實現 L2 Gemini Flash 異步語義判斷（同時覆蓋「空洞 tool call」攻擊面）
 - [ ] 加入 webhook 通知接口
 - [ ] 審計日誌系統
 - [ ] CLI 審計工具（`openclaw-watchdog audit`，復用判定引擎，讀 `.jsonl`）
