@@ -254,6 +254,21 @@ openclaw cron add \
 
 ---
 
+## 多 Agent / 多 Channel 環境
+
+每個 agent 的 session 獨立存放在各自的目錄下（`~/.openclaw/agents/<agent-id>/sessions/`）。`sessions_list` 只能看到**當前 agent 自己的 sessions**，無法跨 agent 抓取。
+
+如果你同時運行多個 agent（例如 Telegram 主 agent + 飛書 agent），每個 agent 需要**各自部署一套三個 cron job**，分別指向各自的 workspace 路徑：
+
+| Agent | Workspace 路徑 | 說明 |
+|-------|--------------|------|
+| 主 agent（如 Telegram） | `~/.openclaw/workspace/` | 預設路徑 |
+| 其他 agent（如飛書） | `~/.openclaw/workspace-<agent-id>/` | 各自獨立 |
+
+共用一套 job 無法跨 agent 抓取 session，會導致其他 agent 的對話記錄被遺漏。
+
+---
+
 ## 延伸方向
 
 - **Phase 2**：Log Job 加入規則層預過濾（先程序過濾再 agent 分析），降低 token 消耗
