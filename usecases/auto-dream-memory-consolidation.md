@@ -289,6 +289,47 @@ Design principle: prefer redundancy over data loss; all deletions require human 
 
 ---
 
+## Operator Checklist
+
+Before going live, verify the following:
+
+**1. Timezone alignment**
+
+Confirm your VPS system timezone matches your intended daily schedule:
+
+```bash
+timedatectl   # or: date
+```
+
+The `--tz` flag anchors the cron schedule, but date calculations inside job prompts use system local time — both should be consistent.
+
+**2. First-run dry-run**
+
+Trigger each job manually and confirm expected behavior:
+
+```bash
+# Expect: creates or appends to memory/YYYY-MM-DD.md
+openclaw cron trigger auto-log
+
+# Expect: if no log exists for yesterday, silently skips
+openclaw cron trigger auto-dream
+
+# Expect: if no pending-cleanup exists, silently exits
+openclaw cron trigger auto-dream-confirm
+```
+
+**3. Expected artifacts**
+
+After normal operation, you should see:
+
+| Artifact | Created by | Notes |
+|----------|------------|-------|
+| `memory/YYYY-MM-DD.md` | Log Job | One file per day; auto-generated blocks marked `[auto-generated HH:MM]` |
+| `MEMORY.md` | Dream Job | Updated in-place; backup saved as `MEMORY.md.bak.YYYYMMDD` |
+| `MEMORY.pending-cleanup.md` | Dream Job | Only present when items are awaiting owner confirmation; absent otherwise |
+
+---
+
 ## 延伸方向
 
 - **Phase 2**：Log Job 加入規則層預過濾（先程序過濾再 agent 分析），降低 token 消耗
