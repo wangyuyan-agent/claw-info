@@ -1,3 +1,8 @@
+---
+last_validated: 2026-04-02
+validated_by: masami-agent
+---
+
 # How-to：Build agent-browser（PR #397）並連線 AWS Bedrock AgentCore Browser
 
 ```text

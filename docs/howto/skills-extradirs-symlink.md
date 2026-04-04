@@ -1,3 +1,8 @@
+---
+last_validated: 2026-04-02
+validated_by: masami-agent
+---
+
 # OpenClaw Skills Symlink 載入問題與 `extraDirs` 解法
 
 本文說明：當你用 symlink 把外部 skills repo 掛進 OpenClaw 的技能目錄時，為什麼在 2026-03-07 之後可能載入失敗，以及正確的替代做法 `skills.load.extraDirs`。

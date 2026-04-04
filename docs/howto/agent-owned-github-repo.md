@@ -1,3 +1,8 @@
+---
+last_validated: 2026-04-02
+validated_by: masami-agent
+---
+
 # Agent 專用 GitHub 帳號與備份策略（預設私有）
 
 ## TL;DR

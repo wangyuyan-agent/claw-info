@@ -1,3 +1,8 @@
+---
+last_validated: 2026-04-02
+validated_by: masami-agent
+---
+
 # Gateway 架構與生命週期（Lifecycle）
 
 > 本文件說明 OpenClaw **Gateway** 的整體架構、生命週期狀態/轉換、重啟與更新行為、可觀測性（observability）與常見故障排除。

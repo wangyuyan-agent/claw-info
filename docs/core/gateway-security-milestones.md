@@ -1,3 +1,8 @@
+---
+last_validated: 2026-04-02
+validated_by: masami-agent
+---
+
 # ClawJacked 漏洞：原因、修復與安全性演進歷程
 
 ## 概述

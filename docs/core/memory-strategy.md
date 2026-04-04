@@ -1,3 +1,8 @@
+---
+last_validated: 2026-04-02
+validated_by: masami-agent
+---
+
 # 記憶系統：以檔案作為記憶（files-as-memory）策略
 
 > 本文說明 OpenClaw 在「沒有永久腦內記憶」的前提下，如何透過**檔案**建立可維護、可稽核、可控風險的長期記憶系統。

@@ -1,3 +1,8 @@
+---
+last_validated: 2026-04-02
+validated_by: masami-agent
+---
+
 # Google Workspace CLI (`gws`) 授權範圍控制指南
 
 本文說明如何為 agent 使用的 Google Workspace CLI (`gws`) 設定最小權限授權，限制存取範圍到特定資料夾，並補充其他服務的特殊考量。

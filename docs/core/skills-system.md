@@ -1,3 +1,8 @@
+---
+last_validated: 2026-04-02
+validated_by: masami-agent
+---
+
 # Skills 系統（打包、版本控制、測試）
 
 > 本文是 OpenClaw 的核心概念深度解析：Skills 是什麼、如何打包、如何寫 SKILL.md、如何在本機測試與安全地發布/更新。

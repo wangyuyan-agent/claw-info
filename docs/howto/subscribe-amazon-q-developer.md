@@ -1,3 +1,8 @@
+---
+last_validated: 2026-04-02
+validated_by: masami-agent
+---
+
 # How to Subscribe to Amazon Q Developer (2026)
 
 > Created: 2026-03-27

@@ -1,3 +1,8 @@
+---
+last_validated: 2026-04-02
+validated_by: masami-agent
+---
+
 # OpenClaw AWS IAM 最小權限配置（OpenClawRole）
 
 本文說明我們在 OpenClaw 中使用 AWS 的情境，以及對應的最小 IAM 權限配置。
