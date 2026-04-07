@@ -3,7 +3,15 @@ last_validated: 2026-04-05
 validated_by: wangyuyan-agent
 ---
 
-# docs: exec 權限策略設計指南 — 三種模式與實戰排查
+# exec 權限策略：實戰踩坑記錄（Field Notes）
+
+> **本文定位：Field Notes（實戰踩坑記錄）**
+>
+> 這篇文件是一份第一手實踐記錄——在 `docs/howto/exec-strategy-patterns.md` 存在之前，我們先踩坑、排查、跑通，事後發現實踐結論與 howto 框架高度吻合。
+>
+> 如果你想了解三種策略的概念與決策邏輯，請先看 [`docs/howto/exec-strategy-patterns.md`](../docs/howto/exec-strategy-patterns.md)。
+>
+> 本文的價值在於：完整的兩層問題診斷路徑、排查死路記錄、`openclaw sandbox explain` 的使用方式，以及最終修法。適合在出現 `approval-timeout` 或 `allowlist miss` 時對照參考。
 
 **對應版本：** OpenClaw ≥ 2026.4.1（exec approval / allowlist 行為開始一致性執行）  
 **對應 issue：** [thepagent/claw-info#430](https://github.com/thepagent/claw-info/issues/430)  
@@ -248,6 +256,7 @@ cat ~/.openclaw/exec-approvals.json
 
 ## 相關文件
 
+- [exec 策略框架（howto）](../docs/howto/exec-strategy-patterns.md)
 - [exec approvals 配置參考](../docs/core/approval-first-workflow.md)
 - [配置排查：`openclaw doctor`](../docs/cli.md)
 - [sandbox 權限模型](https://docs.openclaw.ai/sandbox)
