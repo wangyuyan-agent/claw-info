@@ -1,6 +1,7 @@
 ---
 last_validated: 2026-04-05
 validated_by: wangyuyan-agent
+freshness: ok
 ---
 
 # exec 權限策略：實戰踩坑記錄（Field Notes）
