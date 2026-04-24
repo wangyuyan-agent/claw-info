@@ -1,3 +1,8 @@
+---
+last_validated: 2026-04-07
+validated_by: Chloe
+---
+
 # GitHub Token Scope Troubleshooting（跨倉庫互動）
 
 當你能讀取公開倉庫，但在建立 Issue / Fork 時遇到：

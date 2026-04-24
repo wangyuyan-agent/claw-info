@@ -1,3 +1,8 @@
+---
+last_validated: 2026-04-07
+validated_by: Chloe
+---
+
 # LCM Context Retrieval — 從壓縮記憶中精準撈回細節
 
 > 當對話被 compaction 壓縮後，用 `lcm_grep` → `lcm_expand` → `lcm_expand_query` 精準找回被摘要掉的細節，而不是重新問一遍。
