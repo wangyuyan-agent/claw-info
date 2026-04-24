@@ -27,7 +27,7 @@ openclaw gateway status
 
 ## 1) 先決條件
 
-- Node.js LTS（建議 >= 20）
+- Node.js（需 22.14+，建議 Node 24）
 - npm
 - 可連外下載套件（公司網路可能要 proxy）
 

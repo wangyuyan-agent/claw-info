@@ -9,6 +9,39 @@ validated_by: masami-agent
 
 ACPX（ACP eXternal）Harness 是 OpenClaw ACP（Agent Communication Protocol）的**外部執行後端橋接層**。它讓 OpenClaw gateway 能夠將 agent 任務**委派給外部 AI CLI 工具**執行，而非使用 OpenClaw 自身的內建 LLM runtime。
 
+
+## `openclaw acp` vs ACPX Harness（ACP Agents）
+
+OpenClaw 有兩個容易混淆的 ACP 概念：
+
+| | `openclaw acp` | ACPX Harness（ACP Agents） |
+|---|---|---|
+| 方向 | 外部 IDE/client → OpenClaw | OpenClaw → 外部 CLI |
+| 用途 | IDE 透過 ACP 連接 OpenClaw Gateway | OpenClaw 啟動 Codex/Claude/Gemini 執行任務 |
+| 指令 | `openclaw acp` | `/acp spawn`、binding `type: "acp"` |
+| 工具 | 無（純 bridge） | 外部 CLI 原生工具 |
+
+簡單記法：
+- **editor 想連 OpenClaw** → `openclaw acp`
+- **OpenClaw 想用外部 CLI** → ACPX Harness
+
+## CLI Backends（text-only fallback）
+
+OpenClaw 也支援 **CLI backends** 作為 API provider 掛掉時的 text-only 安全網：
+
+```json5
+{
+  agents: {
+    defaults: {
+      cliBackends: {
+        "kiro-cli": { command: "/opt/homebrew/bin/kiro-cli" }
+      }
+    }
+  }
+}
+```
+
+CLI backends 停用所有工具，僅做 text in → text out。適合作為 provider 故障時的降級方案，不需要完整 ACP harness 設定。
 ---
 
 ## 它解決了什麼痛點
