@@ -1,3 +1,8 @@
+---
+last_validated: 2026-04-07
+validated_by: Chloe
+---
+
 # Node Delegation Architecture
 
 OpenClaw Gateway 作為控制平面，將 ACP 任務派發到遠端的 OpenClaw Node，由 Node 在本機執行 coding CLI（Claude Code、Kiro CLI 等）。

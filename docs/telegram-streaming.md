@@ -1,3 +1,8 @@
+---
+last_validated: 2026-04-07
+validated_by: Chloe
+---
+
 # Telegram 串流輸出機制
 
 > OpenClaw 如何實現 Telegram Bot 的動態回覆體驗

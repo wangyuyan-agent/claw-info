@@ -1,3 +1,8 @@
+---
+last_validated: 2026-04-07
+validated_by: Chloe
+---
+
 # Sub-Agent Orchestration：背景任務委派實戰指南
 
 > 讓 agent 派出分身處理耗時任務，自己繼續回應主人——不阻塞、不遺漏、不失控。

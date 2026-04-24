@@ -1,3 +1,8 @@
+---
+last_validated: 2026-04-07
+validated_by: Chloe
+---
+
 # OpenClaw Exec 權限策略模式
 
 ## 為什麼需要這篇
